@@ -8,11 +8,18 @@ import {
   ListTodo,
   Pencil,
   Plus,
+  Palette,
   Timer,
   Trash2,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import ColorThemePicker, {
+  colorThemes,
+  type ColorTheme,
+} from "@/components/color-theme-picker";
 import FocusTimer from "@/components/focus-timer";
+
+const themeStorageKey = "dayline-color-theme";
 
 type PlannerTask = {
   id: string;
@@ -59,14 +66,35 @@ export default function Dashboard() {
   const [taskTitle, setTaskTitle] = useState("");
   const [taskTime, setTaskTime] = useState("");
   const [todayLabel, setTodayLabel] = useState("");
+  const [colorTheme, setColorTheme] = useState<ColorTheme>("forest");
+  const [themeMessage, setThemeMessage] = useState("");
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       setTodayLabel(formatDate(new Date()));
+      try {
+        const savedTheme = window.localStorage.getItem(themeStorageKey);
+        const matchingTheme = colorThemes.find((theme) => theme.id === savedTheme);
+        if (matchingTheme) {
+          setColorTheme(matchingTheme.id);
+        }
+      } catch {
+        setThemeMessage("Saved color preference could not be loaded.");
+      }
     });
 
     return () => cancelAnimationFrame(frame);
   }, []);
+
+  function changeColorTheme(theme: ColorTheme) {
+    setColorTheme(theme);
+    setThemeMessage("");
+    try {
+      window.localStorage.setItem(themeStorageKey, theme);
+    } catch {
+      setThemeMessage("Theme changed, but this browser could not save your preference.");
+    }
+  }
 
   const completedCount = tasks.filter((task) => task.completed).length;
   const progress = tasks.length ? (completedCount / tasks.length) * 100 : 0;
@@ -127,16 +155,16 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--dayline-ground)] text-[var(--dayline-ink)]">
+    <div data-theme={colorTheme} className="min-h-screen bg-[var(--dayline-ground)] text-[var(--dayline-ink)]">
       <div className="mx-auto grid min-h-screen max-w-[1680px] grid-cols-1 lg:grid-cols-[232px_minmax(0,1fr)]">
-        <aside className="z-20 flex items-center justify-between border-b border-[var(--dayline-line)] bg-white px-5 py-3 lg:sticky lg:top-0 lg:h-screen lg:flex-col lg:items-stretch lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
+        <aside className="z-20 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-[var(--dayline-line)] bg-white px-5 py-3 lg:sticky lg:top-0 lg:h-screen lg:flex-nowrap lg:flex-col lg:items-stretch lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
           <a href="#top" className="flex items-center gap-3" aria-label="Dayline home">
             <span className="grid size-10 place-items-center rounded-xl bg-[var(--dayline-forest)] text-white">
               <CalendarDays aria-hidden="true" size={20} strokeWidth={1.8} />
             </span>
             <span className="text-[17px] font-semibold">dayline</span>
           </a>
-          <nav className="flex items-center gap-1 lg:mt-14 lg:flex-col lg:items-stretch" aria-label="Main navigation">
+          <nav className="order-last flex w-full items-center justify-between gap-1 lg:order-none lg:mt-14 lg:flex-col lg:items-stretch" aria-label="Main navigation">
             <a href="#top" onClick={() => { setDashboardView("today"); setMobileView("tasks"); }} aria-current={dashboardView === "today" ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm lg:px-3 ${dashboardView === "today" ? "bg-[var(--dayline-mint)] font-semibold text-[var(--dayline-forest)]" : "font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)]"}`}>
               <CalendarDays aria-hidden="true" size={18} /><span className="hidden sm:inline">Today</span>
             </a>
@@ -150,7 +178,18 @@ export default function Dashboard() {
               <Timer aria-hidden="true" size={18} /><span className="hidden sm:inline">Focus</span>
             </a>
           </nav>
-          <div className="hidden lg:block lg:mt-auto" aria-hidden="true" />
+          <details className="group relative lg:mt-auto">
+            <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-lg px-2.5 text-sm font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)] [&::-webkit-details-marker]:hidden lg:px-3">
+              <Palette aria-hidden="true" size={16} className="text-[var(--dayline-forest)]" />
+              <span className="hidden sm:inline">Colors</span>
+            </summary>
+            <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-xl border border-[var(--dayline-line)] bg-white p-3 shadow-lg lg:right-auto lg:left-0">
+              <ColorThemePicker value={colorTheme} onChange={changeColorTheme} />
+              <p aria-live="polite" className="mt-2 min-h-4 text-[10px] leading-4 text-[var(--dayline-muted)]">
+                {themeMessage || "Changes are saved to this browser"}
+              </p>
+            </div>
+          </details>
         </aside>
 
         <main id="top" className="min-w-0 px-4 pb-12 pt-7 sm:px-7 lg:px-10 lg:pt-10">

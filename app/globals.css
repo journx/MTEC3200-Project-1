@@ -20,6 +20,54 @@
   --dayline-blue: #e4eff0;
 }
 
+[data-theme="ocean"] {
+  --dayline-ground: #f1f7f8;
+  --dayline-ink: #1c3038;
+  --dayline-muted: #637c84;
+  --dayline-line: #dce8eb;
+  --dayline-forest: #2f7182;
+  --dayline-forest-hover: #245b69;
+  --dayline-sage: #78aab1;
+  --dayline-mint: #e5f2f4;
+  --dayline-pale-green: #edf7f1;
+  --dayline-pale-coral: #edf4ff;
+  --dayline-coral: #91bed0;
+  --dayline-lime: #d1edf1;
+  --dayline-blue: #e2eef7;
+}
+
+[data-theme="lavender"] {
+  --dayline-ground: #f6f3f9;
+  --dayline-ink: #30283b;
+  --dayline-muted: #7a7187;
+  --dayline-line: #e8e1ef;
+  --dayline-forest: #765c9e;
+  --dayline-forest-hover: #604981;
+  --dayline-sage: #a293b7;
+  --dayline-mint: #eee8f5;
+  --dayline-pale-green: #f0eef8;
+  --dayline-pale-coral: #f8edf1;
+  --dayline-coral: #d3a8b8;
+  --dayline-lime: #e3d8ef;
+  --dayline-blue: #ece9f6;
+}
+
+[data-theme="sunset"] {
+  --dayline-ground: #faf4f0;
+  --dayline-ink: #382a25;
+  --dayline-muted: #83736c;
+  --dayline-line: #eee1da;
+  --dayline-forest: #ac5b43;
+  --dayline-forest-hover: #8d4935;
+  --dayline-sage: #bb8b74;
+  --dayline-mint: #f6e8df;
+  --dayline-pale-green: #f8eee3;
+  --dayline-pale-coral: #fbe9e2;
+  --dayline-coral: #e5aa83;
+  --dayline-lime: #f1d8a1;
+  --dayline-blue: #f4e8df;
+}
+
 .dashboard-enter {
   animation: dashboard-enter 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }

@@ -28,6 +28,8 @@ Interview research so far covers three like-minded peers. They described phone s
 
 ### Milestone 1: Plan and complete today's tasks
 
+- A user can enter the prototype as a guest; the sign-in screen is a visual preview and does not authenticate or store account details.
+- A user can choose a color palette for the planner, with the preference saved in the current browser.
 - A user can create, edit, and delete a task with a title, due date, and optional scheduled time.
 - A user can view tasks in a daily time-based accountability calendar and a to-do list, with deadlines and completion status easy to scan.
 - A user can mark a task complete and see that status reflected in both views.
@@ -60,7 +62,7 @@ Interview research so far covers three like-minded peers. They described phone s
 - Which calendar provider should be supported first, and should the initial integration import events only or also write changes back?
 answer: google calendar and apple calendar should be supported first! and import events only would be best.
 - Is an account required for the MVP, or should a user be able to try it without signing in?
-answer: an account is required for the MVP
+current prototype: users can continue as a guest; sign-in is not connected to an authentication provider.
 - What reward feels motivating without feeling childish, distracting, or punitive?
 answer: i think a streak progress would be good and the reward of being able to customize the app more and more would be less childish through every week of tasks being completed
 - Should sleep or wake routines appear as user-created tasks only, or does research support a dedicated sleep-related workflow?
