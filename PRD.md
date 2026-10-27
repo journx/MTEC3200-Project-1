@@ -30,6 +30,8 @@ Interview research so far covers three like-minded peers. They described phone s
 
 - A user can enter the prototype as a guest; the sign-in screen is a visual preview and does not authenticate or store account details.
 - A user can choose a color palette for the planner, with the preference saved in the current browser.
+- A user can see a daily motivational quote from a bundled set of original quotes.
+- A user can read curated sleep-habit resources from public health organizations and select routine patterns to see general, non-medical bedtime ideas. Selections are temporary and do not diagnose, treat, or track sleep.
 - A user can create, edit, and delete a task with a title, due date, and optional scheduled time.
 - A user can view tasks in a daily time-based accountability calendar and a to-do list, with deadlines and completion status easy to scan.
 - A user can mark a task complete and see that status reflected in both views.
@@ -51,11 +53,11 @@ Interview research so far covers three like-minded peers. They described phone s
 ### Out of scope for the MVP
 
 - Community notes, shared accountability, or social features
-- Daily affirmations or motivational content
+- Daily motivational articles or third-party quote feeds
 - Phone widgets or push notifications
 - Phone-level app blocking or a timer that prevents users from leaving the app
 - Location-based calendar or task behavior
-- Sleep tracking, sleep coaching, or health claims
+- Sleep tracking, individualized sleep coaching or treatment, or health claims
 
 ## Open questions
 
@@ -65,8 +67,7 @@ answer: google calendar and apple calendar should be supported first! and import
 current prototype: users can continue as a guest; sign-in is not connected to an authentication provider.
 - What reward feels motivating without feeling childish, distracting, or punitive?
 answer: i think a streak progress would be good and the reward of being able to customize the app more and more would be less childish through every week of tasks being completed
-- Should sleep or wake routines appear as user-created tasks only, or does research support a dedicated sleep-related workflow?
-answer: research support for people who need a better routine so they don't have to think of making their own
+- Sleep routine support is educational only: curated public health resources and general ideas based on optional self-selected routine patterns; it does not provide diagnosis or treatment.
 - What is the smallest useful way to handle tasks that take longer than expected, missed deadlines, and breaks?
 answer: set a seperate toolbar for each of these things so the user can keep track of them while still holding them accountable as well as not shunning them for missed deadlines. also some encouragement and motivational articles/quotes so they know they're not alone
 - The current research includes only three peer interviews and a short personal routine audit. Test the assumptions that users will enter tasks and completion status accurately, that a time-based calendar helps more than a list alone, and that calendar connection is valuable enough to justify its setup.

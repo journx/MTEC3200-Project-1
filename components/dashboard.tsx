@@ -6,6 +6,7 @@ import {
   Circle,
   Clock3,
   ListTodo,
+  MoonStar,
   Pencil,
   Plus,
   Palette,
@@ -18,8 +19,22 @@ import ColorThemePicker, {
   type ColorTheme,
 } from "@/components/color-theme-picker";
 import FocusTimer from "@/components/focus-timer";
+import SleepSupport from "@/components/sleep-support";
 
 const themeStorageKey = "dayline-color-theme";
+
+const dailyQuotes = [
+  "One small step still moves the day forward.",
+  "You can begin before you feel fully ready.",
+  "A plan is a guide, not a test.",
+  "Progress can be quiet and still count.",
+  "Start where you are; the next step is enough.",
+  "Rest and focus can both belong in your day.",
+  "Your pace can change; you can begin again.",
+  "Make today workable, not perfect.",
+  "Finishing one thing is a meaningful start.",
+  "The plan can change when life does.",
+] as const;
 
 type PlannerTask = {
   id: string;
@@ -30,7 +45,7 @@ type PlannerTask = {
 
 type TaskFilter = "all" | "open" | "done";
 type MobileView = "tasks" | "schedule";
-type DashboardView = "today" | "focus";
+type DashboardView = "today" | "focus" | "sleep";
 
 const initialTasks: PlannerTask[] = [
   { id: "task-1", title: "Review project brief", time: "09:30", completed: true },
@@ -56,6 +71,13 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
+function getDailyQuote(date: Date) {
+  const dayNumber = Math.floor(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000,
+  );
+  return dailyQuotes[dayNumber % dailyQuotes.length];
+}
+
 export default function Dashboard() {
   const [tasks, setTasks] = useState(initialTasks);
   const [filter, setFilter] = useState<TaskFilter>("all");
@@ -66,12 +88,27 @@ export default function Dashboard() {
   const [taskTitle, setTaskTitle] = useState("");
   const [taskTime, setTaskTime] = useState("");
   const [todayLabel, setTodayLabel] = useState("");
+  const [dailyQuote, setDailyQuote] = useState<string>(dailyQuotes[0]);
   const [colorTheme, setColorTheme] = useState<ColorTheme>("forest");
   const [themeMessage, setThemeMessage] = useState("");
 
   useEffect(() => {
+    let midnightTimeout: number | undefined;
+
+    function updateDailyContent() {
+      const now = new Date();
+      setTodayLabel(formatDate(now));
+      setDailyQuote(getDailyQuote(now));
+
+      const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      midnightTimeout = window.setTimeout(
+        updateDailyContent,
+        nextDay.getTime() - now.getTime() + 50,
+      );
+    }
+
     const frame = requestAnimationFrame(() => {
-      setTodayLabel(formatDate(new Date()));
+      updateDailyContent();
       try {
         const savedTheme = window.localStorage.getItem(themeStorageKey);
         const matchingTheme = colorThemes.find((theme) => theme.id === savedTheme);
@@ -83,7 +120,12 @@ export default function Dashboard() {
       }
     });
 
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      if (midnightTimeout !== undefined) {
+        window.clearTimeout(midnightTimeout);
+      }
+    };
   }, []);
 
   function changeColorTheme(theme: ColorTheme) {
@@ -177,6 +219,9 @@ export default function Dashboard() {
             <a href="#focus" onClick={() => setDashboardView("focus")} aria-current={dashboardView === "focus" ? "page" : undefined} aria-label="Focus timer" className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm lg:px-3 ${dashboardView === "focus" ? "bg-[var(--dayline-mint)] font-semibold text-[var(--dayline-forest)]" : "font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)]"}`}>
               <Timer aria-hidden="true" size={18} /><span className="hidden sm:inline">Focus</span>
             </a>
+            <a href="#sleep" onClick={() => setDashboardView("sleep")} aria-label="Sleep hygiene" aria-current={dashboardView === "sleep" ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm lg:px-3 ${dashboardView === "sleep" ? "bg-[var(--dayline-mint)] font-semibold text-[var(--dayline-forest)]" : "font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)]"}`}>
+              <MoonStar aria-hidden="true" size={18} /><span className="hidden sm:inline">Sleep hygiene</span>
+            </a>
           </nav>
           <details className="group relative lg:mt-auto">
             <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-lg px-2.5 text-sm font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)] [&::-webkit-details-marker]:hidden lg:px-3">
@@ -196,8 +241,8 @@ export default function Dashboard() {
           <header className="dashboard-enter flex flex-wrap items-end justify-between gap-4 border-b border-[var(--dayline-line)] pb-7">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--dayline-muted)]">{todayLabel || "Today"}</p>
-              <h1 className="mt-2 text-[28px] font-semibold leading-tight sm:text-[34px]">Your day, in view.</h1>
-              <p className="mt-2 text-sm text-[var(--dayline-muted)]">Tasks and scheduled blocks for today.</p>
+              <h1 className="mt-2 text-[28px] font-semibold leading-tight sm:text-[34px]">{dashboardView === "sleep" ? "A gentler wind-down." : "Your day, in view."}</h1>
+              <p className="mt-2 text-sm text-[var(--dayline-muted)]">{dashboardView === "sleep" ? "Explore general ideas for your evening routine." : "Tasks and scheduled blocks for today."}</p>
             </div>
             <div className="flex items-center gap-3 pb-0.5">
               <div className="hidden text-right sm:block">
@@ -208,7 +253,19 @@ export default function Dashboard() {
             </div>
           </header>
 
-          <div className="mt-5 flex items-center gap-2 rounded-lg border border-[var(--dayline-line)] bg-white px-4 py-3 text-sm">
+          <section
+            className="mt-5 rounded-xl border border-[var(--dayline-line)] bg-white px-4 py-4 sm:px-5"
+            aria-label="Daily motivational quote"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--dayline-forest)]">
+              A note for today
+            </p>
+            <blockquote className="mt-2 text-sm font-medium leading-6 text-[var(--dayline-ink)] sm:text-base">
+              {dailyQuote}
+            </blockquote>
+          </section>
+
+          <div hidden={dashboardView === "sleep"} className="mt-5 flex items-center gap-2 rounded-lg border border-[var(--dayline-line)] bg-white px-4 py-3 text-sm">
             <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[var(--dayline-lime)] text-[var(--dayline-forest)]"><Check aria-hidden="true" size={15} strokeWidth={2.5} /></span>
             <p className="min-w-0 flex-1 text-[var(--dayline-ink)]">
               {nextTask ? <><span className="font-semibold">Next up:</span> {nextTask.title}{nextTask.time ? ` at ${formatTime(nextTask.time)}` : ""}</> : <span className="font-semibold">Everything on your list is complete.</span>}
@@ -223,6 +280,9 @@ export default function Dashboard() {
 
           <div hidden={dashboardView !== "focus"} className="mt-7">
             <FocusTimer />
+          </div>
+          <div id="sleep" hidden={dashboardView !== "sleep"} className="mt-7">
+            <SleepSupport />
           </div>
           <div hidden={dashboardView !== "today"} className="mt-7 grid items-start lg:grid-cols-[minmax(300px,0.8fr)_minmax(400px,1.2fr)]">
             <section id="tasks" className={`dashboard-enter min-w-0 pb-10 md:block lg:pr-8 ${mobileView === "tasks" ? "block" : "hidden"}`} aria-labelledby="tasks-heading">
