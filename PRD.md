@@ -35,8 +35,11 @@ Interview research so far covers three like-minded peers. They described phone s
 - A user can optionally record bedtime, wake-up time, a self-reported sleep quality (bad, okay, or great), and a morning feeling. The date-based duration is the time between bedtime and wake-up, not a measure of time actually asleep. Entries are held only while the page is open.
 - A user can review sleep log dates on a compact monthly calendar, where red, yellow, or green dots show the self-reported quality; the rating is also labeled in text.
 - A user can create, edit, and delete a task with a title, due date, and optional scheduled time.
+- A user can add an optional deadline time separate from the task's scheduled work time; a task without a deadline time is due at the end of its deadline date.
 - A user can view tasks in a daily time-based accountability calendar and a to-do list, with deadlines and completion status easy to scan.
 - A user can mark a task complete and see that status reflected in both views.
+- A user can build a streak by completing at least one task per day. A best streak unlocks one additional color palette every 7 days (at 7, 14, and 21 days); earned palettes remain available if the active streak ends. Streak history is saved in the current browser.
+- A user can see a supportive in-app reminder for each overdue task, with options to mark it done or adjust its deadline. If the user grants browser notification permission, the browser can show a one-time reminder per overdue task while the planner is open; the in-app reminder remains visible until the task is completed or its deadline is adjusted.
 - The main view prioritizes upcoming and overdue tasks without requiring the user to navigate through multiple screens.
 - The layout works on a phone-sized viewport and uses clear labels and controls rather than relying on color alone.
 - A user can run an in-app focus timer with customizable focus and break durations. The timer does not block other apps or lock the device.
@@ -56,7 +59,7 @@ Interview research so far covers three like-minded peers. They described phone s
 
 - Community notes, shared accountability, or social features
 - Daily motivational articles or third-party quote feeds
-- Phone widgets or push notifications
+- Phone widgets or mobile push notifications
 - Phone-level app blocking or a timer that prevents users from leaving the app
 - Location-based calendar or task behavior
 - Individualized sleep coaching or treatment, sleep-device integrations, or health claims
@@ -68,11 +71,11 @@ answer: google calendar and apple calendar should be supported first! and import
 - Is an account required for the MVP, or should a user be able to try it without signing in?
 current prototype: users can continue as a guest; sign-in is not connected to an authentication provider.
 - What reward feels motivating without feeling childish, distracting, or punitive?
-answer: i think a streak progress would be good and the reward of being able to customize the app more and more would be less childish through every week of tasks being completed
+answer: streak progress that unlocks more app customization through completed weeks of tasks; prototype rewards are one palette every 7 consecutive active days.
 - Sleep routine support is educational only: curated public health resources and general ideas based on optional self-selected routine patterns; it does not provide diagnosis or treatment.
 - Sleep logs are optional, self-reported, held in memory only for the open page session, and do not measure or assess health.
 - What is the smallest useful way to handle tasks that take longer than expected, missed deadlines, and breaks?
-answer: set a seperate toolbar for each of these things so the user can keep track of them while still holding them accountable as well as not shunning them for missed deadlines. also some encouragement and motivational articles/quotes so they know they're not alone
+answer: separate tracking, accountability without shaming, and encouragement for missed deadlines. Prototype overdue reminders are supportive and stay in-app; optional browser notifications require permission and only work while the planner is open.
 - The current research includes only three peer interviews and a short personal routine audit. Test the assumptions that users will enter tasks and completion status accurately, that a time-based calendar helps more than a list alone, and that calendar connection is valuable enough to justify its setup.
 - What success measure should be used in a pilot? Candidate measures include whether users can create and complete tasks without assistance, how often they return to the daily plan, and users' reported sense of control over balancing responsibilities and leisure.
 answer: push notifications and a way to do timely reminders would be most beneficial 

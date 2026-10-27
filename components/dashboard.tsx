@@ -1,19 +1,22 @@
 "use client";
 
 import {
+  Bell,
   CalendarDays,
   Check,
   Circle,
   Clock3,
+  Flame,
   ListTodo,
   MoonStar,
   Pencil,
   Plus,
   Palette,
+  Sparkles,
   Timer,
   Trash2,
 } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import ColorThemePicker, {
   colorThemes,
   type ColorTheme,
@@ -24,6 +27,8 @@ import SleepSupport from "@/components/sleep-support";
 import type { SleepEntry } from "@/types/sleep";
 
 const themeStorageKey = "dayline-color-theme";
+const completionStorageKey = "dayline-task-completion-dates";
+const notifiedTasksStorageKey = "dayline-notified-overdue-tasks";
 
 const dailyQuotes = [
   "One small step still moves the day forward.",
@@ -42,18 +47,21 @@ type PlannerTask = {
   id: string;
   title: string;
   time: string;
+  dueDate: string;
+  dueTime: string;
   completed: boolean;
 };
 
 type TaskFilter = "all" | "open" | "done";
 type MobileView = "tasks" | "schedule";
 type DashboardView = "today" | "focus" | "sleep";
+type NotificationStatus = NotificationPermission | "unsupported";
 
 const initialTasks: PlannerTask[] = [
-  { id: "task-1", title: "Review project brief", time: "09:30", completed: true },
-  { id: "task-2", title: "Finish research notes", time: "11:00", completed: false },
-  { id: "task-3", title: "Email project partner", time: "14:30", completed: false },
-  { id: "task-4", title: "Pick up groceries", time: "17:00", completed: false },
+  { id: "task-1", title: "Review project brief", time: "09:30", dueDate: "", dueTime: "", completed: true },
+  { id: "task-2", title: "Finish research notes", time: "11:00", dueDate: "", dueTime: "", completed: false },
+  { id: "task-3", title: "Email project partner", time: "14:30", dueDate: "", dueTime: "", completed: false },
+  { id: "task-4", title: "Pick up groceries", time: "17:00", dueDate: "", dueTime: "", completed: false },
 ];
 
 const hours = Array.from({ length: 13 }, (_, index) => index + 8);
@@ -87,6 +95,76 @@ function getLocalDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function isDateKey(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const parsedDate = new Date(`${value}T00:00:00Z`);
+  return (
+    !Number.isNaN(parsedDate.getTime()) &&
+    parsedDate.toISOString().slice(0, 10) === value
+  );
+}
+
+function getBestStreak(dates: string[]) {
+  const completedDays = new Set(dates);
+  const sortedDays = [...completedDays].sort();
+  let bestStreak = 0;
+  let streak = 0;
+  let previousDay = -2;
+
+  for (const date of sortedDays) {
+    const day = Date.parse(`${date}T00:00:00Z`) / 86_400_000;
+    streak = day === previousDay + 1 ? streak + 1 : 1;
+    bestStreak = Math.max(bestStreak, streak);
+    previousDay = day;
+  }
+
+  return bestStreak;
+}
+
+function getCurrentStreak(dates: string[], today: string) {
+  const completedDays = new Set(dates);
+  const todayNumber = Date.parse(`${today}T00:00:00Z`) / 86_400_000;
+  const yesterday = new Date((todayNumber - 1) * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  let day = completedDays.has(today)
+    ? todayNumber
+    : completedDays.has(yesterday)
+      ? todayNumber - 1
+      : Number.NaN;
+  let streak = 0;
+
+  while (Number.isFinite(day)) {
+    const date = new Date(day * 86_400_000).toISOString().slice(0, 10);
+    if (!completedDays.has(date)) break;
+    streak += 1;
+    day -= 1;
+  }
+
+  return streak;
+}
+
+function isTaskOverdue(task: PlannerTask, now: Date) {
+  if (task.completed || !task.dueDate) return false;
+  const dueAt = new Date(
+    `${task.dueDate}T${task.dueTime || "23:59"}:${task.dueTime ? "00" : "59"}`,
+  );
+  return !Number.isNaN(dueAt.getTime()) && dueAt.getTime() < now.getTime();
+}
+
+function formatDeadline(task: PlannerTask) {
+  const date = new Date(`${task.dueDate}T12:00:00`);
+  const dateLabel = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
+  return task.dueTime
+    ? `${dateLabel} at ${formatTime(task.dueTime)}`
+    : `${dateLabel} (end of day)`;
+}
+
 export default function Dashboard() {
   const [tasks, setTasks] = useState(initialTasks);
   const [filter, setFilter] = useState<TaskFilter>("all");
@@ -96,10 +174,21 @@ export default function Dashboard() {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskTime, setTaskTime] = useState("");
+  const [taskDueDate, setTaskDueDate] = useState("");
+  const [taskDueTime, setTaskDueTime] = useState("");
   const [todayLabel, setTodayLabel] = useState("");
+  const [now, setNow] = useState<Date | null>(null);
   const [dailyQuote, setDailyQuote] = useState<string>(dailyQuotes[0]);
   const [colorTheme, setColorTheme] = useState<ColorTheme>("forest");
   const [themeMessage, setThemeMessage] = useState("");
+  const [completionDates, setCompletionDates] = useState<string[]>([]);
+  const [completionDatesLoaded, setCompletionDatesLoaded] = useState(false);
+  const [progressMessage, setProgressMessage] = useState("");
+  const notifiedTaskIds = useRef(new Set<string>());
+  const [notifiedTaskIdsLoaded, setNotifiedTaskIdsLoaded] = useState(false);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationStatus>("default");
+  const [notificationMessage, setNotificationMessage] = useState("");
   const [sleepEntries, setSleepEntries] = useState<Record<string, SleepEntry>>({});
   const [sleepSelectedDate, setSleepSelectedDate] = useState("");
   const [sleepCalendarMonth, setSleepCalendarMonth] = useState("");
@@ -111,6 +200,7 @@ export default function Dashboard() {
       const now = new Date();
       setTodayLabel(formatDate(now));
       setDailyQuote(getDailyQuote(now));
+      setNow(now);
       setSleepSelectedDate((current) => current || getLocalDateKey(now));
       setSleepCalendarMonth(
         (current) =>
@@ -127,6 +217,11 @@ export default function Dashboard() {
 
     const frame = requestAnimationFrame(() => {
       updateDailyContent();
+      setNotificationPermission(
+        "Notification" in window
+          ? window.Notification.permission
+          : "unsupported",
+      );
       try {
         const savedTheme = window.localStorage.getItem(themeStorageKey);
         const matchingTheme = colorThemes.find((theme) => theme.id === savedTheme);
@@ -137,13 +232,66 @@ export default function Dashboard() {
         setThemeMessage("Saved color preference could not be loaded.");
       }
     });
+    const clockInterval = window.setInterval(() => setNow(new Date()), 30_000);
 
     return () => {
       cancelAnimationFrame(frame);
+      window.clearInterval(clockInterval);
       if (midnightTimeout !== undefined) {
         window.clearTimeout(midnightTimeout);
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      try {
+        const savedDates: unknown = JSON.parse(
+          window.localStorage.getItem(completionStorageKey) ?? "[]",
+        );
+        if (
+          !Array.isArray(savedDates) ||
+          !savedDates.every(isDateKey)
+        ) {
+          throw new Error("Saved completion dates have an invalid format.");
+        }
+        setCompletionDates([...new Set(savedDates)]);
+      } catch {
+        setProgressMessage("Saved streak history could not be loaded.");
+      }
+      setCompletionDatesLoaded(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!completionDatesLoaded) return;
+    const frame = requestAnimationFrame(() => {
+      try {
+        window.localStorage.setItem(completionStorageKey, JSON.stringify(completionDates));
+      } catch {
+        setProgressMessage("Streak progress could not be saved in this browser.");
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [completionDates, completionDatesLoaded]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      try {
+        const savedIds: unknown = JSON.parse(
+          window.localStorage.getItem(notifiedTasksStorageKey) ?? "[]",
+        );
+        if (!Array.isArray(savedIds) || !savedIds.every((id) => typeof id === "string")) {
+          throw new Error("Saved reminder history has an invalid format.");
+        }
+        notifiedTaskIds.current = new Set(savedIds);
+      } catch {
+        setNotificationMessage("Reminder history could not be loaded.");
+      }
+      setNotifiedTaskIdsLoaded(true);
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   function changeColorTheme(theme: ColorTheme) {
@@ -153,6 +301,30 @@ export default function Dashboard() {
       window.localStorage.setItem(themeStorageKey, theme);
     } catch {
       setThemeMessage("Theme changed, but this browser could not save your preference.");
+    }
+  }
+
+  async function enableBrowserNotifications() {
+    if (!("Notification" in window)) {
+      setNotificationPermission("unsupported");
+      setNotificationMessage("Browser notifications are not supported here.");
+      return;
+    }
+
+    try {
+      const permission = await window.Notification.requestPermission();
+      setNotificationPermission(permission);
+      setNotificationMessage(
+        permission === "granted"
+          ? "Browser reminders are enabled while the planner is open."
+          : permission === "denied"
+            ? "Notifications are blocked in browser settings. In-app reminders will still appear."
+            : "Browser permission was not granted. In-app reminders will still appear.",
+      );
+    } catch {
+      setNotificationMessage(
+        "Could not enable browser notifications. In-app reminders will still appear.",
+      );
     }
   }
 
@@ -184,12 +356,56 @@ export default function Dashboard() {
     if (filter === "done") return task.completed;
     return true;
   });
+  const todayKey = now ? getLocalDateKey(now) : "";
+  const currentStreak = todayKey ? getCurrentStreak(completionDates, todayKey) : 0;
+  const bestStreak = getBestStreak(completionDates);
+  const overdueTasks = useMemo(
+    () => (now ? tasks.filter((task) => isTaskOverdue(task, now)) : []),
+    [now, tasks],
+  );
+
+  useEffect(() => {
+    if (
+      notificationPermission !== "granted" ||
+      !notifiedTaskIdsLoaded ||
+      overdueTasks.length === 0
+    ) {
+      return;
+    }
+
+    const newNotifications = overdueTasks.filter(
+      (task) => !notifiedTaskIds.current.has(task.id),
+    );
+    if (newNotifications.length === 0) return;
+
+    try {
+      for (const task of newNotifications) {
+        new window.Notification("A task deadline has passed", {
+          body: `${task.title} is still on your list. You can finish it or adjust the plan.`,
+          tag: `dayline-overdue-${task.id}`,
+        });
+        notifiedTaskIds.current.add(task.id);
+      }
+      window.localStorage.setItem(
+        notifiedTasksStorageKey,
+        JSON.stringify([...notifiedTaskIds.current]),
+      );
+    } catch {
+      requestAnimationFrame(() => {
+        setNotificationMessage(
+          "A browser reminder or its history could not be saved. The overdue task is still listed here.",
+        );
+      });
+    }
+  }, [notificationPermission, notifiedTaskIdsLoaded, overdueTasks]);
 
   function openNewTaskForm() {
     setMobileView("tasks");
     setEditingTaskId(null);
     setTaskTitle("");
     setTaskTime("");
+    setTaskDueDate(getLocalDateKey(new Date()));
+    setTaskDueTime("");
     setIsFormOpen(true);
   }
 
@@ -197,23 +413,29 @@ export default function Dashboard() {
     setEditingTaskId(task.id);
     setTaskTitle(task.title);
     setTaskTime(task.time);
+    setTaskDueDate(task.dueDate);
+    setTaskDueTime(task.dueTime);
     setIsFormOpen(true);
   }
 
   function saveTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const title = taskTitle.trim();
-    if (!title) return;
+    if (!title || !taskDueDate) return;
 
     if (editingTaskId) {
       setTasks((current) => current.map((task) =>
-        task.id === editingTaskId ? { ...task, title, time: taskTime } : task,
+        task.id === editingTaskId
+          ? { ...task, title, time: taskTime, dueDate: taskDueDate, dueTime: taskDueTime }
+          : task,
       ));
     } else {
       setTasks((current) => [...current, {
         id: `task-${Date.now()}`,
         title,
         time: taskTime,
+        dueDate: taskDueDate,
+        dueTime: taskDueTime,
         completed: false,
       }]);
     }
@@ -222,12 +444,25 @@ export default function Dashboard() {
     setEditingTaskId(null);
     setTaskTitle("");
     setTaskTime("");
+    setTaskDueDate("");
+    setTaskDueTime("");
   }
 
   function toggleTask(taskId: string) {
-    setTasks((current) => current.map((task) =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task,
+    const task = tasks.find((currentTask) => currentTask.id === taskId);
+    if (!task) return;
+    const isCompleting = !task.completed;
+    setTasks((current) => current.map((currentTask) =>
+      currentTask.id === taskId
+        ? { ...currentTask, completed: !currentTask.completed }
+        : currentTask,
     ));
+    if (isCompleting) {
+      const completedToday = getLocalDateKey(new Date());
+      setCompletionDates((current) =>
+        current.includes(completedToday) ? current : [...current, completedToday],
+      );
+    }
   }
 
   function deleteTask(taskId: string) {
@@ -267,7 +502,11 @@ export default function Dashboard() {
               <span className="hidden sm:inline">Colors</span>
             </summary>
             <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-xl border border-[var(--dayline-line)] bg-white p-3 shadow-lg lg:right-auto lg:left-0">
-              <ColorThemePicker value={colorTheme} onChange={changeColorTheme} />
+              <ColorThemePicker
+                value={colorTheme}
+                bestStreak={bestStreak}
+                onChange={changeColorTheme}
+              />
               <p aria-live="polite" className="mt-2 min-h-4 text-[10px] leading-4 text-[var(--dayline-muted)]">
                 {themeMessage || "Changes are saved to this browser"}
               </p>
@@ -303,6 +542,64 @@ export default function Dashboard() {
             </blockquote>
           </section>
 
+          <section
+            className="mt-4 rounded-xl border border-[var(--dayline-line)] bg-white px-4 py-4 sm:px-5"
+            aria-labelledby="streak-heading"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid size-10 place-items-center rounded-xl bg-[var(--dayline-mint)] text-[var(--dayline-forest)]">
+                  <Flame aria-hidden="true" size={20} />
+                </span>
+                <div>
+                  <h2 id="streak-heading" className="text-sm font-semibold">
+                    {currentStreak} day{currentStreak === 1 ? "" : "s"} in a row
+                  </h2>
+                  <p className="mt-0.5 text-xs text-[var(--dayline-muted)]">
+                    Best streak: {bestStreak} day{bestStreak === 1 ? "" : "s"} ·
+                    complete one task a day
+                  </p>
+                </div>
+              </div>
+              {(() => {
+                const nextReward = colorThemes.find(
+                  (theme) => theme.requiredStreak > bestStreak,
+                );
+                if (!nextReward) {
+                  return (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--dayline-mint)] px-3 py-1.5 text-xs font-semibold text-[var(--dayline-forest)]">
+                      <Sparkles aria-hidden="true" size={14} />
+                      All palettes unlocked
+                    </span>
+                  );
+                }
+
+                const previousRewardAt = nextReward.requiredStreak - 7;
+                const rewardProgress =
+                  ((bestStreak - previousRewardAt) / 7) * 100;
+                return (
+                  <div className="w-full max-w-56">
+                    <p className="text-right text-[11px] font-medium text-[var(--dayline-muted)]">
+                      {nextReward.requiredStreak - bestStreak} more day
+                      {nextReward.requiredStreak - bestStreak === 1 ? "" : "s"} to
+                      unlock {nextReward.name}
+                    </p>
+                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--dayline-ground)]">
+                      <div
+                        className="h-full rounded-full bg-[var(--dayline-forest)]"
+                        style={{ width: `${Math.min(100, Math.max(0, rewardProgress))}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+            <p aria-live="polite" className="mt-2 text-[10px] leading-4 text-[var(--dayline-muted)]">
+              {progressMessage ||
+                "Streak history is saved in this browser. Earned palettes stay unlocked."}
+            </p>
+          </section>
+
           <div hidden={dashboardView === "sleep"} className="mt-5 flex items-center gap-2 rounded-lg border border-[var(--dayline-line)] bg-white px-4 py-3 text-sm">
             <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[var(--dayline-lime)] text-[var(--dayline-forest)]"><Check aria-hidden="true" size={15} strokeWidth={2.5} /></span>
             <p className="min-w-0 flex-1 text-[var(--dayline-ink)]">
@@ -310,6 +607,85 @@ export default function Dashboard() {
             </p>
             <span className="hidden shrink-0 text-xs text-[var(--dayline-muted)] sm:inline">{completedCount} of {tasks.length} done</span>
           </div>
+
+          <section
+            hidden={dashboardView === "sleep" || overdueTasks.length === 0}
+            className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4"
+            aria-labelledby="overdue-heading"
+            aria-live="polite"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 id="overdue-heading" className="text-sm font-semibold text-amber-950">
+                  A deadline has passed. You can still choose a next step.
+                </h2>
+                <p className="mt-1 text-xs leading-5 text-amber-900">
+                  No judgment—finish it, adjust the deadline, or make the task
+                  smaller. Your plan can change.
+                </p>
+              </div>
+              {notificationPermission === "granted" ? (
+                <span className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-white/80 px-3 text-xs font-medium text-amber-950">
+                  <Bell aria-hidden="true" size={14} />
+                  Browser reminders on
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={enableBrowserNotifications}
+                  disabled={notificationPermission === "unsupported"}
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-white px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Bell aria-hidden="true" size={14} />
+                  {notificationPermission === "denied"
+                    ? "Notifications blocked"
+                    : notificationPermission === "unsupported"
+                      ? "Browser reminders unavailable"
+                      : "Enable browser reminders"}
+                </button>
+              )}
+            </div>
+            <ul className="mt-3 divide-y divide-amber-200/80">
+              {overdueTasks.map((task) => (
+                <li
+                  key={task.id}
+                  className="flex flex-wrap items-center justify-between gap-2 py-2 first:pt-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-amber-950">
+                      {task.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-amber-900">
+                      Was due {formatDeadline(task)}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleTask(task.id)}
+                      className="min-h-9 rounded-lg px-2.5 text-xs font-semibold text-amber-950 hover:bg-white/70"
+                    >
+                      Mark done
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDashboardView("today");
+                        setMobileView("tasks");
+                        openEditTaskForm(task);
+                      }}
+                      className="min-h-9 rounded-lg px-2.5 text-xs font-semibold text-amber-950 hover:bg-white/70"
+                    >
+                      Adjust deadline
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p aria-live="polite" className="mt-2 min-h-4 text-[10px] leading-4 text-amber-900">
+              {notificationMessage || "Browser notifications require permission and only work while the planner is open."}
+            </p>
+          </section>
 
           <div hidden={dashboardView !== "today"}>
             {sleepCalendarMonth && (
@@ -374,6 +750,16 @@ export default function Dashboard() {
                 <form onSubmit={saveTask} className="mt-4 rounded-xl border border-[var(--dayline-line)] bg-white p-4">
                   <label htmlFor="task-title" className="block text-sm font-semibold">{editingTaskId ? "Edit task" : "New task"}</label>
                   <input id="task-title" autoFocus required value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} placeholder="What needs to get done?" className="mt-2 h-11 w-full rounded-lg border border-[var(--dayline-line)] px-3 text-sm outline-none placeholder:text-[var(--dayline-muted)] focus:border-[var(--dayline-forest)] focus:ring-2 focus:ring-[var(--dayline-mint)]" />
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <label htmlFor="task-due-date" className="block text-xs font-medium text-[var(--dayline-muted)]">
+                      Deadline date
+                      <input id="task-due-date" type="date" required value={taskDueDate} onChange={(event) => setTaskDueDate(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--dayline-line)] px-3 text-sm text-[var(--dayline-ink)] outline-none focus:border-[var(--dayline-forest)] focus:ring-2 focus:ring-[var(--dayline-mint)]" />
+                    </label>
+                    <label htmlFor="task-due-time" className="block text-xs font-medium text-[var(--dayline-muted)]">
+                      Deadline time (optional)
+                      <input id="task-due-time" type="time" value={taskDueTime} onChange={(event) => setTaskDueTime(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--dayline-line)] px-3 text-sm text-[var(--dayline-ink)] outline-none focus:border-[var(--dayline-forest)] focus:ring-2 focus:ring-[var(--dayline-mint)]" />
+                    </label>
+                  </div>
                   <label htmlFor="task-time" className="mt-3 flex items-center gap-2 text-xs font-medium text-[var(--dayline-muted)]"><Clock3 aria-hidden="true" size={14} />Add to schedule (optional)</label>
                   <input id="task-time" type="time" value={taskTime} onChange={(event) => setTaskTime(event.target.value)} className="mt-1.5 h-10 rounded-lg border border-[var(--dayline-line)] px-3 text-sm outline-none focus:border-[var(--dayline-forest)] focus:ring-2 focus:ring-[var(--dayline-mint)]" />
                   <div className="mt-4 flex justify-end gap-2">
@@ -390,7 +776,10 @@ export default function Dashboard() {
                       <input type="checkbox" checked={task.completed} onChange={() => toggleTask(task.id)} aria-label={`${task.completed ? "Mark incomplete" : "Mark complete"}: ${task.title}`} className="mt-0.5 size-[18px] shrink-0 accent-[var(--dayline-forest)]" />
                       <span className="min-w-0">
                         <span className={`block text-sm leading-5 ${task.completed ? "text-[var(--dayline-muted)] line-through" : "font-medium text-[var(--dayline-ink)]"}`}>{task.title}</span>
-                        <span className="mt-1 flex items-center gap-1 text-xs text-[var(--dayline-muted)]"><Clock3 aria-hidden="true" size={12} />{task.time ? formatTime(task.time) : "No time set"}</span>
+                        <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--dayline-muted)]">
+                          <span className="inline-flex items-center gap-1"><Clock3 aria-hidden="true" size={12} />{task.time ? formatTime(task.time) : "No scheduled time"}</span>
+                          {task.dueDate && <span className={`inline-flex items-center gap-1 ${now && isTaskOverdue(task, now) ? "font-semibold text-red-700" : ""}`}><CalendarDays aria-hidden="true" size={12} />Due {formatDeadline(task)}</span>}
+                        </span>
                       </span>
                     </label>
                     <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
