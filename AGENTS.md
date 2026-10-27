@@ -20,11 +20,7 @@ Keep the experience self-evident and easy to scan. The intended users include st
 
 ## Stack
 
-<<<<<<< HEAD
 - Next.js 16.4.3 with the App Router
-=======
-- Next.js 16.4.0 with the App Router
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
 - React and React DOM 19.3.0
 - TypeScript 5.9.3
 - Tailwind CSS 4.3.3, using `@tailwindcss/turbopack` 4.3.3 and `tw-animate-css` 1.4.0
@@ -35,11 +31,7 @@ Keep the experience self-evident and easy to scan. The intended users include st
 - Data: no database or persistence provider is configured. Keep provider choices open and do not claim local or remote data persists unless implemented.
 - APIs: no external API integration is configured. Calendar provider and sync direction are TBD in `PRD.md`.
 
-<<<<<<< HEAD
 Installed development tools include ESLint 9.39.5, `eslint-config-next` 16.4.3, and TypeScript 5.9.3. These versions reflect the current install; update this section when dependencies change.
-=======
-Installed development tools include ESLint 9.39.5, `eslint-config-next` 16.4.0, and TypeScript 5.9.3. These versions reflect the current install; update this section when dependencies change.
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
 
 ## Commands
 
@@ -63,11 +55,7 @@ Installed development tools include ESLint 9.39.5, `eslint-config-next` 16.4.0, 
 - Implement the PRD in milestones: first task creation, daily calendar/list views, deadlines, and completion; then calendar connection and rewards after their open decisions are resolved.
 - Do not add community features, notifications, widgets, app blocking, location behavior, sleep tracking, or sleep coaching unless the PRD is updated.
 - Treat calendar provider, sync direction, authentication, persistence, and reward mechanics as undecided until the user chooses them. Do not add credentials or external integrations by assumption.
-<<<<<<< HEAD
 - Read the relevant guide under `node_modules/next/dist/docs/` before changing Next.js code, as required by the generated Next.js rules above. This project uses Next.js 16.4.3, whose APIs may differ from older examples.
-=======
-- Read the relevant guide under `node_modules/next/dist/docs/` before changing Next.js code, as required by the generated Next.js rules above. This project uses Next.js 16.4.0, whose APIs may differ from older examples.
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
 - Build one screen at a time and avoid changing working screens unless requested.
 - Use shadcn components before building an equivalent from scratch. When adding them, document each in `docs/components.md`.
 - Never commit `.env.local`, API keys, or other secrets.
@@ -78,7 +66,6 @@ Installed development tools include ESLint 9.39.5, `eslint-config-next` 16.4.0, 
 - The user is a student with limited coding knowledge. Keep explanations short and define unfamiliar terms when needed.
 - Tell the user which files you changed.
 - Stop after completing each task so the user can test it manually.
-<<<<<<< HEAD
 
 <!-- BEGIN:nextjs-agent-feedback -->
 
@@ -100,5 +87,3 @@ Retain qualifying friction even if it is later fixed or worked around; record th
 Before the final response, run one reporting pass. If candidates remain, from this file's directory run `npx --no-install next internal agent-feedback-instructions` once without piping or truncating its output. Follow its output or error guidance. If a network sandbox blocks it, retry with network access; if it still returns no output, continue normally.
 
 <!-- END:nextjs-agent-feedback -->
-=======
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc

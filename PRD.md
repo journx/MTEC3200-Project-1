@@ -28,7 +28,6 @@ Interview research so far covers three like-minded peers. They described phone s
 
 ### Milestone 1: Plan and complete today's tasks
 
-<<<<<<< HEAD
 - A user can enter the prototype as a guest; the sign-in screen is a visual preview and does not authenticate or store account details.
 - A user can choose a color palette for the planner, with the preference saved in the current browser.
 - A user can see a daily motivational quote from a bundled set of original quotes.
@@ -44,13 +43,6 @@ Interview research so far covers three like-minded peers. They described phone s
 - The main view prioritizes upcoming and overdue tasks without requiring the user to navigate through multiple screens.
 - The layout works on a phone-sized viewport and uses clear labels and controls rather than relying on color alone.
 - A user can run an in-app focus timer with customizable focus and break durations. The timer does not block other apps or lock the device.
-=======
-- A user can create, edit, and delete a task with a title, due date, and optional scheduled time.
-- A user can view tasks in a daily time-based accountability calendar and a to-do list, with deadlines and completion status easy to scan.
-- A user can mark a task complete and see that status reflected in both views.
-- The main view prioritizes upcoming and overdue tasks without requiring the user to navigate through multiple screens.
-- The layout works on a phone-sized viewport and uses clear labels and controls rather than relying on color alone.
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
 
 **Milestone check:** In a usability test, a first-time user can add a task with a deadline, find it in the day's plan, and mark it complete without guidance. Record where they hesitate and whether the schedule is understandable at a glance.
 
@@ -66,24 +58,15 @@ Interview research so far covers three like-minded peers. They described phone s
 ### Out of scope for the MVP
 
 - Community notes, shared accountability, or social features
-<<<<<<< HEAD
 - Daily motivational articles or third-party quote feeds
 - Phone widgets or mobile push notifications
 - Phone-level app blocking or a timer that prevents users from leaving the app
 - Location-based calendar or task behavior
 - Individualized sleep coaching or treatment, sleep-device integrations, or health claims
-=======
-- Daily affirmations or motivational content
-- Phone widgets or push notifications
-- A phone-level focus timer, break timer, or blocking other apps
-- Location-based calendar or task behavior
-- Sleep tracking, sleep coaching, or health claims
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
 
 ## Open questions
 
 - Which calendar provider should be supported first, and should the initial integration import events only or also write changes back?
-<<<<<<< HEAD
 answer: google calendar and apple calendar should be supported first! and import events only would be best.
 - Is an account required for the MVP, or should a user be able to try it without signing in?
 current prototype: users can continue as a guest; sign-in is not connected to an authentication provider.
@@ -95,12 +78,4 @@ answer: streak progress that unlocks more app customization through completed we
 answer: separate tracking, accountability without shaming, and encouragement for missed deadlines. Prototype overdue reminders are supportive and stay in-app; optional browser notifications require permission and only work while the planner is open.
 - The current research includes only three peer interviews and a short personal routine audit. Test the assumptions that users will enter tasks and completion status accurately, that a time-based calendar helps more than a list alone, and that calendar connection is valuable enough to justify its setup.
 - What success measure should be used in a pilot? Candidate measures include whether users can create and complete tasks without assistance, how often they return to the daily plan, and users' reported sense of control over balancing responsibilities and leisure.
-answer: push notifications and a way to do timely reminders would be most beneficial 
-=======
-- Is an account required for the MVP, or should a user be able to try it without signing in?
-- What reward feels motivating without feeling childish, distracting, or punitive?
-- Should sleep or wake routines appear as user-created tasks only, or does research support a dedicated sleep-related workflow?
-- What is the smallest useful way to handle tasks that take longer than expected, missed deadlines, and breaks?
-- The current research includes only three peer interviews and a short personal routine audit. Test the assumptions that users will enter tasks and completion status accurately, that a time-based calendar helps more than a list alone, and that calendar connection is valuable enough to justify its setup.
-- What success measure should be used in a pilot? Candidate measures include whether users can create and complete tasks without assistance, how often they return to the daily plan, and users' reported sense of control over balancing responsibilities and leisure.
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
+answer: push notifications and a way to do timely reminders would be most beneficial

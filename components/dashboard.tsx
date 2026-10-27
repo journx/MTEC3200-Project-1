@@ -1,15 +1,11 @@
 "use client";
 
 import {
-<<<<<<< HEAD
   Bell,
-=======
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
   CalendarDays,
   Check,
   Circle,
   Clock3,
-<<<<<<< HEAD
   Flame,
   ListTodo,
   MoonStar,
@@ -46,30 +42,18 @@ const dailyQuotes = [
   "Finishing one thing is a meaningful start.",
   "The plan can change when life does.",
 ] as const;
-=======
-  ListTodo,
-  Pencil,
-  Plus,
-  Trash2,
-} from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
 
 type PlannerTask = {
   id: string;
   title: string;
   time: string;
-<<<<<<< HEAD
   dueDate: string;
   dueTime: string;
-=======
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
   completed: boolean;
 };
 
 type TaskFilter = "all" | "open" | "done";
 type MobileView = "tasks" | "schedule";
-<<<<<<< HEAD
 type DashboardView = "today" | "focus" | "sleep";
 type NotificationStatus = NotificationPermission | "unsupported";
 
@@ -78,14 +62,6 @@ const initialTasks: PlannerTask[] = [
   { id: "task-2", title: "Finish research notes", time: "11:00", dueDate: "", dueTime: "", completed: false },
   { id: "task-3", title: "Email project partner", time: "14:30", dueDate: "", dueTime: "", completed: false },
   { id: "task-4", title: "Pick up groceries", time: "17:00", dueDate: "", dueTime: "", completed: false },
-=======
-
-const initialTasks: PlannerTask[] = [
-  { id: "task-1", title: "Review project brief", time: "09:30", completed: true },
-  { id: "task-2", title: "Finish research notes", time: "11:00", completed: false },
-  { id: "task-3", title: "Email project partner", time: "14:30", completed: false },
-  { id: "task-4", title: "Pick up groceries", time: "17:00", completed: false },
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
 ];
 
 const hours = Array.from({ length: 13 }, (_, index) => index + 8);
@@ -105,7 +81,6 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
-<<<<<<< HEAD
 function getDailyQuote(date: Date) {
   const dayNumber = Math.floor(
     Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000,
@@ -190,21 +165,15 @@ function formatDeadline(task: PlannerTask) {
     : `${dateLabel} (end of day)`;
 }
 
-=======
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
 export default function Dashboard() {
   const [tasks, setTasks] = useState(initialTasks);
   const [filter, setFilter] = useState<TaskFilter>("all");
   const [mobileView, setMobileView] = useState<MobileView>("tasks");
-<<<<<<< HEAD
   const [dashboardView, setDashboardView] = useState<DashboardView>("today");
-=======
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskTime, setTaskTime] = useState("");
-<<<<<<< HEAD
   const [taskDueDate, setTaskDueDate] = useState("");
   const [taskDueTime, setTaskDueTime] = useState("");
   const [todayLabel, setTodayLabel] = useState("");
@@ -379,18 +348,6 @@ export default function Dashboard() {
     });
   }
 
-=======
-  const [todayLabel, setTodayLabel] = useState("");
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      setTodayLabel(formatDate(new Date()));
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
   const completedCount = tasks.filter((task) => task.completed).length;
   const progress = tasks.length ? (completedCount / tasks.length) * 100 : 0;
   const nextTask = tasks.find((task) => !task.completed);
@@ -399,7 +356,6 @@ export default function Dashboard() {
     if (filter === "done") return task.completed;
     return true;
   });
-<<<<<<< HEAD
   const todayKey = now ? getLocalDateKey(now) : "";
   const currentStreak = todayKey ? getCurrentStreak(completionDates, todayKey) : 0;
   const bestStreak = getBestStreak(completionDates);
@@ -442,19 +398,14 @@ export default function Dashboard() {
       });
     }
   }, [notificationPermission, notifiedTaskIdsLoaded, overdueTasks]);
-=======
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
 
   function openNewTaskForm() {
     setMobileView("tasks");
     setEditingTaskId(null);
     setTaskTitle("");
     setTaskTime("");
-<<<<<<< HEAD
     setTaskDueDate(getLocalDateKey(new Date()));
     setTaskDueTime("");
-=======
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
     setIsFormOpen(true);
   }
 
@@ -462,18 +413,14 @@ export default function Dashboard() {
     setEditingTaskId(task.id);
     setTaskTitle(task.title);
     setTaskTime(task.time);
-<<<<<<< HEAD
     setTaskDueDate(task.dueDate);
     setTaskDueTime(task.dueTime);
-=======
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
     setIsFormOpen(true);
   }
 
   function saveTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const title = taskTitle.trim();
-<<<<<<< HEAD
     if (!title || !taskDueDate) return;
 
     if (editingTaskId) {
@@ -481,24 +428,14 @@ export default function Dashboard() {
         task.id === editingTaskId
           ? { ...task, title, time: taskTime, dueDate: taskDueDate, dueTime: taskDueTime }
           : task,
-=======
-    if (!title) return;
-
-    if (editingTaskId) {
-      setTasks((current) => current.map((task) =>
-        task.id === editingTaskId ? { ...task, title, time: taskTime } : task,
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
       ));
     } else {
       setTasks((current) => [...current, {
         id: `task-${Date.now()}`,
         title,
         time: taskTime,
-<<<<<<< HEAD
         dueDate: taskDueDate,
         dueTime: taskDueTime,
-=======
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
         completed: false,
       }]);
     }
@@ -507,7 +444,6 @@ export default function Dashboard() {
     setEditingTaskId(null);
     setTaskTitle("");
     setTaskTime("");
-<<<<<<< HEAD
     setTaskDueDate("");
     setTaskDueTime("");
   }
@@ -527,14 +463,6 @@ export default function Dashboard() {
         current.includes(completedToday) ? current : [...current, completedToday],
       );
     }
-=======
-  }
-
-  function toggleTask(taskId: string) {
-    setTasks((current) => current.map((task) =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task,
-    ));
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
   }
 
   function deleteTask(taskId: string) {
@@ -542,22 +470,15 @@ export default function Dashboard() {
   }
 
   return (
-<<<<<<< HEAD
     <div data-theme={colorTheme} className="min-h-screen bg-[var(--dayline-ground)] text-[var(--dayline-ink)]">
       <div className="mx-auto grid min-h-screen max-w-[1680px] grid-cols-1 lg:grid-cols-[232px_minmax(0,1fr)]">
         <aside className="z-20 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-[var(--dayline-line)] bg-white px-5 py-3 lg:sticky lg:top-0 lg:h-screen lg:flex-nowrap lg:flex-col lg:items-stretch lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
-=======
-    <div className="min-h-screen bg-[var(--dayline-ground)] text-[var(--dayline-ink)]">
-      <div className="mx-auto grid min-h-screen max-w-[1680px] grid-cols-1 lg:grid-cols-[232px_minmax(0,1fr)]">
-        <aside className="z-20 flex items-center justify-between border-b border-[var(--dayline-line)] bg-white px-5 py-3 lg:sticky lg:top-0 lg:h-screen lg:flex-col lg:items-stretch lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
           <a href="#top" className="flex items-center gap-3" aria-label="Dayline home">
             <span className="grid size-10 place-items-center rounded-xl bg-[var(--dayline-forest)] text-white">
               <CalendarDays aria-hidden="true" size={20} strokeWidth={1.8} />
             </span>
             <span className="text-[17px] font-semibold">dayline</span>
           </a>
-<<<<<<< HEAD
           <nav className="order-last flex w-full items-center justify-between gap-1 lg:order-none lg:mt-14 lg:flex-col lg:items-stretch" aria-label="Main navigation">
             <a href="#top" onClick={() => { setDashboardView("today"); setMobileView("tasks"); }} aria-current={dashboardView === "today" ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm lg:px-3 ${dashboardView === "today" ? "bg-[var(--dayline-mint)] font-semibold text-[var(--dayline-forest)]" : "font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)]"}`}>
               <CalendarDays aria-hidden="true" size={18} /><span className="hidden sm:inline">Today</span>
@@ -591,33 +512,14 @@ export default function Dashboard() {
               </p>
             </div>
           </details>
-=======
-          <nav className="flex items-center gap-1 lg:mt-14 lg:flex-col lg:items-stretch" aria-label="Main navigation">
-            <a href="#top" onClick={() => setMobileView("tasks")} aria-current="page" className="flex items-center gap-3 rounded-lg bg-[var(--dayline-mint)] px-3 py-2.5 text-sm font-semibold text-[var(--dayline-forest)]">
-              <CalendarDays aria-hidden="true" size={18} /><span className="hidden sm:inline">Today</span>
-            </a>
-            <a href="#tasks" onClick={() => setMobileView("tasks")} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)]">
-              <ListTodo aria-hidden="true" size={18} /><span className="hidden sm:inline">My tasks</span>
-            </a>
-            <a href="#schedule" onClick={() => setMobileView("schedule")} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)]">
-              <Clock3 aria-hidden="true" size={18} /><span className="hidden sm:inline">Schedule</span>
-            </a>
-          </nav>
-          <div className="hidden lg:block lg:mt-auto" aria-hidden="true" />
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
         </aside>
 
         <main id="top" className="min-w-0 px-4 pb-12 pt-7 sm:px-7 lg:px-10 lg:pt-10">
           <header className="dashboard-enter flex flex-wrap items-end justify-between gap-4 border-b border-[var(--dayline-line)] pb-7">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--dayline-muted)]">{todayLabel || "Today"}</p>
-<<<<<<< HEAD
               <h1 className="mt-2 text-[28px] font-semibold leading-tight sm:text-[34px]">{dashboardView === "sleep" ? "A gentler wind-down." : "Your day, in view."}</h1>
               <p className="mt-2 text-sm text-[var(--dayline-muted)]">{dashboardView === "sleep" ? "Explore general ideas for your evening routine." : "Tasks and scheduled blocks for today."}</p>
-=======
-              <h1 className="mt-2 text-[28px] font-semibold leading-tight sm:text-[34px]">Your day, in view.</h1>
-              <p className="mt-2 text-sm text-[var(--dayline-muted)]">Tasks and scheduled blocks for today.</p>
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
             </div>
             <div className="flex items-center gap-3 pb-0.5">
               <div className="hidden text-right sm:block">
@@ -628,7 +530,6 @@ export default function Dashboard() {
             </div>
           </header>
 
-<<<<<<< HEAD
           <section
             className="mt-5 rounded-xl border border-[var(--dayline-line)] bg-white px-4 py-4 sm:px-5"
             aria-label="Daily motivational quote"
@@ -700,9 +601,6 @@ export default function Dashboard() {
           </section>
 
           <div hidden={dashboardView === "sleep"} className="mt-5 flex items-center gap-2 rounded-lg border border-[var(--dayline-line)] bg-white px-4 py-3 text-sm">
-=======
-          <div className="mt-5 flex items-center gap-2 rounded-lg border border-[var(--dayline-line)] bg-white px-4 py-3 text-sm">
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
             <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[var(--dayline-lime)] text-[var(--dayline-forest)]"><Check aria-hidden="true" size={15} strokeWidth={2.5} /></span>
             <p className="min-w-0 flex-1 text-[var(--dayline-ink)]">
               {nextTask ? <><span className="font-semibold">Next up:</span> {nextTask.title}{nextTask.time ? ` at ${formatTime(nextTask.time)}` : ""}</> : <span className="font-semibold">Everything on your list is complete.</span>}
@@ -710,7 +608,6 @@ export default function Dashboard() {
             <span className="hidden shrink-0 text-xs text-[var(--dayline-muted)] sm:inline">{completedCount} of {tasks.length} done</span>
           </div>
 
-<<<<<<< HEAD
           <section
             hidden={dashboardView === "sleep" || overdueTasks.length === 0}
             className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4"
@@ -804,14 +701,10 @@ export default function Dashboard() {
           </div>
 
           <div hidden={dashboardView !== "today"} className="mt-5 inline-flex rounded-lg border border-[var(--dayline-line)] bg-white p-1 md:hidden" aria-label="Choose dashboard view">
-=======
-          <div className="mt-5 inline-flex rounded-lg border border-[var(--dayline-line)] bg-white p-1 md:hidden" aria-label="Choose dashboard view">
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
             <button type="button" onClick={() => setMobileView("tasks")} aria-pressed={mobileView === "tasks"} className={`rounded-md px-4 py-2 text-sm font-medium ${mobileView === "tasks" ? "bg-[var(--dayline-forest)] text-white" : "text-[var(--dayline-muted)]"}`}>Tasks</button>
             <button type="button" onClick={() => setMobileView("schedule")} aria-pressed={mobileView === "schedule"} className={`rounded-md px-4 py-2 text-sm font-medium ${mobileView === "schedule" ? "bg-[var(--dayline-forest)] text-white" : "text-[var(--dayline-muted)]"}`}>Schedule</button>
           </div>
 
-<<<<<<< HEAD
           <div hidden={dashboardView !== "focus"} className="mt-7">
             <FocusTimer />
           </div>
@@ -826,9 +719,6 @@ export default function Dashboard() {
             />
           </div>
           <div hidden={dashboardView !== "today"} className="mt-7 grid items-start lg:grid-cols-[minmax(300px,0.8fr)_minmax(400px,1.2fr)]">
-=======
-          <div className="mt-7 grid items-start lg:grid-cols-[minmax(300px,0.8fr)_minmax(400px,1.2fr)]">
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
             <section id="tasks" className={`dashboard-enter min-w-0 pb-10 md:block lg:pr-8 ${mobileView === "tasks" ? "block" : "hidden"}`} aria-labelledby="tasks-heading">
               <div className="flex items-end justify-between gap-3">
                 <div>
@@ -860,7 +750,6 @@ export default function Dashboard() {
                 <form onSubmit={saveTask} className="mt-4 rounded-xl border border-[var(--dayline-line)] bg-white p-4">
                   <label htmlFor="task-title" className="block text-sm font-semibold">{editingTaskId ? "Edit task" : "New task"}</label>
                   <input id="task-title" autoFocus required value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} placeholder="What needs to get done?" className="mt-2 h-11 w-full rounded-lg border border-[var(--dayline-line)] px-3 text-sm outline-none placeholder:text-[var(--dayline-muted)] focus:border-[var(--dayline-forest)] focus:ring-2 focus:ring-[var(--dayline-mint)]" />
-<<<<<<< HEAD
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <label htmlFor="task-due-date" className="block text-xs font-medium text-[var(--dayline-muted)]">
                       Deadline date
@@ -871,8 +760,6 @@ export default function Dashboard() {
                       <input id="task-due-time" type="time" value={taskDueTime} onChange={(event) => setTaskDueTime(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--dayline-line)] px-3 text-sm text-[var(--dayline-ink)] outline-none focus:border-[var(--dayline-forest)] focus:ring-2 focus:ring-[var(--dayline-mint)]" />
                     </label>
                   </div>
-=======
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
                   <label htmlFor="task-time" className="mt-3 flex items-center gap-2 text-xs font-medium text-[var(--dayline-muted)]"><Clock3 aria-hidden="true" size={14} />Add to schedule (optional)</label>
                   <input id="task-time" type="time" value={taskTime} onChange={(event) => setTaskTime(event.target.value)} className="mt-1.5 h-10 rounded-lg border border-[var(--dayline-line)] px-3 text-sm outline-none focus:border-[var(--dayline-forest)] focus:ring-2 focus:ring-[var(--dayline-mint)]" />
                   <div className="mt-4 flex justify-end gap-2">
@@ -889,14 +776,10 @@ export default function Dashboard() {
                       <input type="checkbox" checked={task.completed} onChange={() => toggleTask(task.id)} aria-label={`${task.completed ? "Mark incomplete" : "Mark complete"}: ${task.title}`} className="mt-0.5 size-[18px] shrink-0 accent-[var(--dayline-forest)]" />
                       <span className="min-w-0">
                         <span className={`block text-sm leading-5 ${task.completed ? "text-[var(--dayline-muted)] line-through" : "font-medium text-[var(--dayline-ink)]"}`}>{task.title}</span>
-<<<<<<< HEAD
                         <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--dayline-muted)]">
                           <span className="inline-flex items-center gap-1"><Clock3 aria-hidden="true" size={12} />{task.time ? formatTime(task.time) : "No scheduled time"}</span>
                           {task.dueDate && <span className={`inline-flex items-center gap-1 ${now && isTaskOverdue(task, now) ? "font-semibold text-red-700" : ""}`}><CalendarDays aria-hidden="true" size={12} />Due {formatDeadline(task)}</span>}
                         </span>
-=======
-                        <span className="mt-1 flex items-center gap-1 text-xs text-[var(--dayline-muted)]"><Clock3 aria-hidden="true" size={12} />{task.time ? formatTime(task.time) : "No time set"}</span>
->>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
                       </span>
                     </label>
                     <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
