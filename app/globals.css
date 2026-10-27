@@ -20,6 +20,7 @@
   --dayline-blue: #e4eff0;
 }
 
+<<<<<<< HEAD
 [data-theme="ocean"] {
   --dayline-ground: #f1f7f8;
   --dayline-ink: #1c3038;
@@ -116,6 +117,8 @@
   --dayline-blue: #e7eaf5;
 }
 
+=======
+>>>>>>> e773d33be1705cfa0a0da44d193d1313b588b5dc
 .dashboard-enter {
   animation: dashboard-enter 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
