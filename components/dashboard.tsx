@@ -19,7 +19,9 @@ import ColorThemePicker, {
   type ColorTheme,
 } from "@/components/color-theme-picker";
 import FocusTimer from "@/components/focus-timer";
+import SleepCalendar from "@/components/sleep-calendar";
 import SleepSupport from "@/components/sleep-support";
+import type { SleepEntry } from "@/types/sleep";
 
 const themeStorageKey = "dayline-color-theme";
 
@@ -78,6 +80,13 @@ function getDailyQuote(date: Date) {
   return dailyQuotes[dayNumber % dailyQuotes.length];
 }
 
+function getLocalDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default function Dashboard() {
   const [tasks, setTasks] = useState(initialTasks);
   const [filter, setFilter] = useState<TaskFilter>("all");
@@ -91,6 +100,9 @@ export default function Dashboard() {
   const [dailyQuote, setDailyQuote] = useState<string>(dailyQuotes[0]);
   const [colorTheme, setColorTheme] = useState<ColorTheme>("forest");
   const [themeMessage, setThemeMessage] = useState("");
+  const [sleepEntries, setSleepEntries] = useState<Record<string, SleepEntry>>({});
+  const [sleepSelectedDate, setSleepSelectedDate] = useState("");
+  const [sleepCalendarMonth, setSleepCalendarMonth] = useState("");
 
   useEffect(() => {
     let midnightTimeout: number | undefined;
@@ -99,6 +111,12 @@ export default function Dashboard() {
       const now = new Date();
       setTodayLabel(formatDate(now));
       setDailyQuote(getDailyQuote(now));
+      setSleepSelectedDate((current) => current || getLocalDateKey(now));
+      setSleepCalendarMonth(
+        (current) =>
+          current ||
+          `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
+      );
 
       const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
       midnightTimeout = window.setTimeout(
@@ -136,6 +154,26 @@ export default function Dashboard() {
     } catch {
       setThemeMessage("Theme changed, but this browser could not save your preference.");
     }
+  }
+
+  function selectSleepDate(date: string) {
+    setSleepSelectedDate(date);
+    if (date) {
+      setSleepCalendarMonth(date.slice(0, 7));
+    }
+  }
+
+  function saveSleepEntry(entry: SleepEntry) {
+    setSleepEntries((current) => ({ ...current, [entry.date]: entry }));
+    selectSleepDate(entry.date);
+  }
+
+  function deleteSleepEntry(date: string) {
+    setSleepEntries((current) => {
+      const next = { ...current };
+      delete next[date];
+      return next;
+    });
   }
 
   const completedCount = tasks.filter((task) => task.completed).length;
@@ -273,6 +311,19 @@ export default function Dashboard() {
             <span className="hidden shrink-0 text-xs text-[var(--dayline-muted)] sm:inline">{completedCount} of {tasks.length} done</span>
           </div>
 
+          <div hidden={dashboardView !== "today"}>
+            {sleepCalendarMonth && (
+              <SleepCalendar
+                entries={sleepEntries}
+                selectedDate={sleepSelectedDate}
+                month={sleepCalendarMonth}
+                onSelectDate={selectSleepDate}
+                onChangeMonth={setSleepCalendarMonth}
+                onLogSleep={() => setDashboardView("sleep")}
+              />
+            )}
+          </div>
+
           <div hidden={dashboardView !== "today"} className="mt-5 inline-flex rounded-lg border border-[var(--dayline-line)] bg-white p-1 md:hidden" aria-label="Choose dashboard view">
             <button type="button" onClick={() => setMobileView("tasks")} aria-pressed={mobileView === "tasks"} className={`rounded-md px-4 py-2 text-sm font-medium ${mobileView === "tasks" ? "bg-[var(--dayline-forest)] text-white" : "text-[var(--dayline-muted)]"}`}>Tasks</button>
             <button type="button" onClick={() => setMobileView("schedule")} aria-pressed={mobileView === "schedule"} className={`rounded-md px-4 py-2 text-sm font-medium ${mobileView === "schedule" ? "bg-[var(--dayline-forest)] text-white" : "text-[var(--dayline-muted)]"}`}>Schedule</button>
@@ -282,7 +333,14 @@ export default function Dashboard() {
             <FocusTimer />
           </div>
           <div id="sleep" hidden={dashboardView !== "sleep"} className="mt-7">
-            <SleepSupport />
+            <SleepSupport
+              key={sleepSelectedDate || "today"}
+              entries={sleepEntries}
+              selectedDate={sleepSelectedDate}
+              onSelectDate={selectSleepDate}
+              onSaveEntry={saveSleepEntry}
+              onDeleteEntry={deleteSleepEntry}
+            />
           </div>
           <div hidden={dashboardView !== "today"} className="mt-7 grid items-start lg:grid-cols-[minmax(300px,0.8fr)_minmax(400px,1.2fr)]">
             <section id="tasks" className={`dashboard-enter min-w-0 pb-10 md:block lg:pr-8 ${mobileView === "tasks" ? "block" : "hidden"}`} aria-labelledby="tasks-heading">

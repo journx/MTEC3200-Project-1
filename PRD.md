@@ -31,7 +31,9 @@ Interview research so far covers three like-minded peers. They described phone s
 - A user can enter the prototype as a guest; the sign-in screen is a visual preview and does not authenticate or store account details.
 - A user can choose a color palette for the planner, with the preference saved in the current browser.
 - A user can see a daily motivational quote from a bundled set of original quotes.
-- A user can read curated sleep-habit resources from public health organizations and select routine patterns to see general, non-medical bedtime ideas. Selections are temporary and do not diagnose, treat, or track sleep.
+- A user can read curated sleep-habit resources from public health organizations and select routine patterns to see general, non-medical bedtime ideas.
+- A user can optionally record bedtime, wake-up time, a self-reported sleep quality (bad, okay, or great), and a morning feeling. The date-based duration is the time between bedtime and wake-up, not a measure of time actually asleep. Entries are held only while the page is open.
+- A user can review sleep log dates on a compact monthly calendar, where red, yellow, or green dots show the self-reported quality; the rating is also labeled in text.
 - A user can create, edit, and delete a task with a title, due date, and optional scheduled time.
 - A user can view tasks in a daily time-based accountability calendar and a to-do list, with deadlines and completion status easy to scan.
 - A user can mark a task complete and see that status reflected in both views.
@@ -57,7 +59,7 @@ Interview research so far covers three like-minded peers. They described phone s
 - Phone widgets or push notifications
 - Phone-level app blocking or a timer that prevents users from leaving the app
 - Location-based calendar or task behavior
-- Sleep tracking, individualized sleep coaching or treatment, or health claims
+- Individualized sleep coaching or treatment, sleep-device integrations, or health claims
 
 ## Open questions
 
@@ -68,6 +70,7 @@ current prototype: users can continue as a guest; sign-in is not connected to an
 - What reward feels motivating without feeling childish, distracting, or punitive?
 answer: i think a streak progress would be good and the reward of being able to customize the app more and more would be less childish through every week of tasks being completed
 - Sleep routine support is educational only: curated public health resources and general ideas based on optional self-selected routine patterns; it does not provide diagnosis or treatment.
+- Sleep logs are optional, self-reported, held in memory only for the open page session, and do not measure or assess health.
 - What is the smallest useful way to handle tasks that take longer than expected, missed deadlines, and breaks?
 answer: set a seperate toolbar for each of these things so the user can keep track of them while still holding them accountable as well as not shunning them for missed deadlines. also some encouragement and motivational articles/quotes so they know they're not alone
 - The current research includes only three peer interviews and a short personal routine audit. Test the assumptions that users will enter tasks and completion status accurately, that a time-based calendar helps more than a list alone, and that calendar connection is valuable enough to justify its setup.

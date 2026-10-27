@@ -9,9 +9,79 @@ import {
   Coffee,
   Monitor,
   MoonStar,
+  Save,
   VolumeX,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import type {
+  MorningFeeling,
+  SleepEntry,
+  SleepQuality,
+} from "@/types/sleep";
+
+type SleepSupportProps = {
+  entries: Record<string, SleepEntry>;
+  selectedDate: string;
+  onSelectDate: (date: string) => void;
+  onSaveEntry: (entry: SleepEntry) => void;
+  onDeleteEntry: (date: string) => void;
+};
+
+const qualityOptions: {
+  value: SleepQuality;
+  label: string;
+  color: string;
+  selectedColor: string;
+}[] = [
+  {
+    value: "bad",
+    label: "Bad",
+    color: "border-red-200 hover:bg-red-50",
+    selectedColor: "border-red-500 bg-red-50 text-red-800",
+  },
+  {
+    value: "okay",
+    label: "Okay",
+    color: "border-yellow-200 hover:bg-yellow-50",
+    selectedColor: "border-yellow-500 bg-yellow-50 text-yellow-900",
+  },
+  {
+    value: "great",
+    label: "Great",
+    color: "border-green-200 hover:bg-green-50",
+    selectedColor: "border-green-600 bg-green-50 text-green-900",
+  },
+];
+
+const feelingOptions: { value: MorningFeeling; label: string }[] = [
+  { value: "rested", label: "Rested" },
+  { value: "okay", label: "Okay" },
+  { value: "tired", label: "Tired" },
+  { value: "other", label: "Other" },
+];
+
+function getMinutes(time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function getSleepWindowMinutes(bedtime: string, wakeTime: string) {
+  if (!bedtime || !wakeTime) return 0;
+  return (getMinutes(wakeTime) - getMinutes(bedtime) + 1440) % 1440;
+}
+
+function formatDuration(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes ? `${hours} hr ${remainingMinutes} min` : `${hours} hr`;
+}
+
+function getLocalDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 const routineOptions = [
   {
@@ -84,8 +154,22 @@ const readingResources = [
 
 type RoutineOptionId = (typeof routineOptions)[number]["id"];
 
-export default function SleepSupport() {
+export default function SleepSupport({
+  entries,
+  selectedDate,
+  onSelectDate,
+  onSaveEntry,
+  onDeleteEntry,
+}: SleepSupportProps) {
   const [selectedRoutines, setSelectedRoutines] = useState<RoutineOptionId[]>([]);
+  const selectedEntry = entries[selectedDate];
+  const [wakeDate, setWakeDate] = useState(selectedDate);
+  const [bedtime, setBedtime] = useState(selectedEntry?.bedtime ?? "22:30");
+  const [wakeTime, setWakeTime] = useState(selectedEntry?.wakeTime ?? "07:00");
+  const [quality, setQuality] = useState<SleepQuality>(selectedEntry?.quality ?? "okay");
+  const [feeling, setFeeling] = useState<MorningFeeling>(selectedEntry?.feeling ?? "okay");
+  const [formError, setFormError] = useState("");
+  const [formMessage, setFormMessage] = useState("");
 
   function toggleRoutine(id: RoutineOptionId) {
     setSelectedRoutines((current) =>
@@ -98,6 +182,31 @@ export default function SleepSupport() {
   const suggestions = routineOptions.filter((option) =>
     selectedRoutines.includes(option.id),
   );
+  const estimatedDuration = getSleepWindowMinutes(bedtime, wakeTime);
+
+  function saveSleepEntry(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!wakeDate || !bedtime || !wakeTime) {
+      setFormError("Choose a date, bedtime, and wake-up time.");
+      return;
+    }
+
+    if (!estimatedDuration) {
+      setFormError("Bedtime and wake-up time need to be different.");
+      return;
+    }
+
+    onSaveEntry({
+      date: wakeDate,
+      bedtime,
+      wakeTime,
+      durationMinutes: estimatedDuration,
+      quality,
+      feeling,
+    });
+    setFormError("");
+    setFormMessage("Sleep log saved for this page session.");
+  }
 
   return (
     <section className="dashboard-enter" aria-labelledby="sleep-heading">
@@ -188,6 +297,169 @@ export default function SleepSupport() {
           )}
         </div>
       </div>
+
+      <section className="mt-7 max-w-3xl rounded-2xl border border-[var(--dayline-line)] bg-white p-4 sm:p-5" aria-labelledby="sleep-log-heading">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--dayline-muted)]">
+            Optional check-in
+          </p>
+          <h3 id="sleep-log-heading" className="mt-1 text-lg font-semibold">
+            Log last night
+          </h3>
+          <p className="mt-1 text-xs leading-5 text-[var(--dayline-muted)]">
+            Choose the morning you woke up. Time is estimated from bedtime to
+            wake-up and may include time spent awake.
+          </p>
+        </div>
+
+        <form onSubmit={saveSleepEntry} className="mt-4 space-y-4">
+          <label htmlFor="sleep-wake-date" className="block text-sm font-medium">
+            Wake-up date
+            <input
+              id="sleep-wake-date"
+              type="date"
+              value={wakeDate}
+              onChange={(event) => {
+                setWakeDate(event.target.value);
+                onSelectDate(event.target.value);
+                setFormMessage("");
+              }}
+              max={getLocalDateKey(new Date())}
+              required
+              className="mt-1.5 block min-h-10 w-full max-w-xs rounded-lg border border-[var(--dayline-line)] px-3 text-sm outline-none focus:border-[var(--dayline-forest)] focus:ring-2 focus:ring-[var(--dayline-mint)]"
+            />
+          </label>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label htmlFor="sleep-bedtime" className="block text-sm font-medium">
+              Bedtime
+              <input
+                id="sleep-bedtime"
+                type="time"
+                value={bedtime}
+                onChange={(event) => {
+                  setBedtime(event.target.value);
+                  setFormMessage("");
+                }}
+                required
+                className="mt-1.5 block min-h-10 w-full rounded-lg border border-[var(--dayline-line)] px-3 text-sm outline-none focus:border-[var(--dayline-forest)] focus:ring-2 focus:ring-[var(--dayline-mint)]"
+              />
+            </label>
+            <label htmlFor="sleep-wake-time" className="block text-sm font-medium">
+              Wake-up time
+              <input
+                id="sleep-wake-time"
+                type="time"
+                value={wakeTime}
+                onChange={(event) => {
+                  setWakeTime(event.target.value);
+                  setFormMessage("");
+                }}
+                required
+                className="mt-1.5 block min-h-10 w-full rounded-lg border border-[var(--dayline-line)] px-3 text-sm outline-none focus:border-[var(--dayline-forest)] focus:ring-2 focus:ring-[var(--dayline-mint)]"
+              />
+            </label>
+          </div>
+          <p className="text-xs text-[var(--dayline-muted)]" aria-live="polite">
+            {estimatedDuration
+              ? `Time between bedtime and wake-up: ${formatDuration(estimatedDuration)}`
+              : "Enter different bedtime and wake-up times to calculate the time window."}
+          </p>
+
+          <fieldset>
+            <legend className="text-sm font-medium">How did you sleep?</legend>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {qualityOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setQuality(option.value);
+                    setFormMessage("");
+                  }}
+                  aria-pressed={quality === option.value}
+                  className={`flex min-h-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dayline-forest)] ${
+                    quality === option.value
+                      ? option.selectedColor
+                      : `text-[var(--dayline-ink)] ${option.color}`
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`size-2.5 rounded-full ${
+                      option.value === "bad"
+                        ? "bg-red-500"
+                        : option.value === "okay"
+                          ? "bg-yellow-400"
+                          : "bg-green-500"
+                    }`}
+                  />
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend className="text-sm font-medium">How do you feel?</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {feelingOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setFeeling(option.value);
+                    setFormMessage("");
+                  }}
+                  aria-pressed={feeling === option.value}
+                  className={`min-h-10 rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dayline-forest)] ${
+                    feeling === option.value
+                      ? "border-[var(--dayline-forest)] bg-[var(--dayline-mint)] text-[var(--dayline-forest)]"
+                      : "border-[var(--dayline-line)] text-[var(--dayline-muted)] hover:bg-[var(--dayline-ground)]"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <div aria-live="polite" className="min-h-5 text-xs">
+            {formError ? (
+              <p className="text-red-700">{formError}</p>
+            ) : (
+              <p className="text-[var(--dayline-forest)]">{formMessage}</p>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="submit"
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[var(--dayline-forest)] px-4 text-sm font-semibold text-white hover:bg-[var(--dayline-forest-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dayline-forest)]"
+            >
+              <Save aria-hidden="true" size={15} />
+              Save sleep log
+            </button>
+            {entries[wakeDate] && (
+              <button
+                type="button"
+                onClick={() => {
+                  onDeleteEntry(wakeDate);
+                  setFormMessage("Sleep log deleted.");
+                }}
+                className="min-h-10 rounded-lg px-3 text-sm font-medium text-[var(--dayline-muted)] hover:bg-[var(--dayline-ground)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dayline-forest)]"
+              >
+                Delete this log
+              </button>
+            )}
+          </div>
+        </form>
+
+        <p className="mt-4 border-t border-[var(--dayline-line)] pt-3 text-xs leading-5 text-[var(--dayline-muted)]">
+          Sleep logs are kept only while this page is open and are cleared when
+          you reload it. This is a self-reported reflection, not a medical
+          assessment.
+        </p>
+      </section>
 
       <section className="mt-8" aria-labelledby="reading-heading">
         <div className="flex items-center gap-2">
