@@ -8,9 +8,11 @@ import {
   ListTodo,
   Pencil,
   Plus,
+  Timer,
   Trash2,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import FocusTimer from "@/components/focus-timer";
 
 type PlannerTask = {
   id: string;
@@ -21,6 +23,7 @@ type PlannerTask = {
 
 type TaskFilter = "all" | "open" | "done";
 type MobileView = "tasks" | "schedule";
+type DashboardView = "today" | "focus";
 
 const initialTasks: PlannerTask[] = [
   { id: "task-1", title: "Review project brief", time: "09:30", completed: true },
@@ -50,6 +53,7 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState(initialTasks);
   const [filter, setFilter] = useState<TaskFilter>("all");
   const [mobileView, setMobileView] = useState<MobileView>("tasks");
+  const [dashboardView, setDashboardView] = useState<DashboardView>("today");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [taskTitle, setTaskTitle] = useState("");
@@ -133,14 +137,17 @@ export default function Dashboard() {
             <span className="text-[17px] font-semibold">dayline</span>
           </a>
           <nav className="flex items-center gap-1 lg:mt-14 lg:flex-col lg:items-stretch" aria-label="Main navigation">
-            <a href="#top" onClick={() => setMobileView("tasks")} aria-current="page" className="flex items-center gap-3 rounded-lg bg-[var(--dayline-mint)] px-3 py-2.5 text-sm font-semibold text-[var(--dayline-forest)]">
+            <a href="#top" onClick={() => { setDashboardView("today"); setMobileView("tasks"); }} aria-current={dashboardView === "today" ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm lg:px-3 ${dashboardView === "today" ? "bg-[var(--dayline-mint)] font-semibold text-[var(--dayline-forest)]" : "font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)]"}`}>
               <CalendarDays aria-hidden="true" size={18} /><span className="hidden sm:inline">Today</span>
             </a>
-            <a href="#tasks" onClick={() => setMobileView("tasks")} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)]">
+            <a href="#tasks" onClick={() => { setDashboardView("today"); setMobileView("tasks"); }} className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)] lg:px-3">
               <ListTodo aria-hidden="true" size={18} /><span className="hidden sm:inline">My tasks</span>
             </a>
-            <a href="#schedule" onClick={() => setMobileView("schedule")} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)]">
+            <a href="#schedule" onClick={() => { setDashboardView("today"); setMobileView("schedule"); }} className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)] lg:px-3">
               <Clock3 aria-hidden="true" size={18} /><span className="hidden sm:inline">Schedule</span>
+            </a>
+            <a href="#focus" onClick={() => setDashboardView("focus")} aria-current={dashboardView === "focus" ? "page" : undefined} aria-label="Focus timer" className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm lg:px-3 ${dashboardView === "focus" ? "bg-[var(--dayline-mint)] font-semibold text-[var(--dayline-forest)]" : "font-medium text-[var(--dayline-muted)] transition-colors hover:bg-[var(--dayline-ground)] hover:text-[var(--dayline-ink)]"}`}>
+              <Timer aria-hidden="true" size={18} /><span className="hidden sm:inline">Focus</span>
             </a>
           </nav>
           <div className="hidden lg:block lg:mt-auto" aria-hidden="true" />
@@ -170,12 +177,15 @@ export default function Dashboard() {
             <span className="hidden shrink-0 text-xs text-[var(--dayline-muted)] sm:inline">{completedCount} of {tasks.length} done</span>
           </div>
 
-          <div className="mt-5 inline-flex rounded-lg border border-[var(--dayline-line)] bg-white p-1 md:hidden" aria-label="Choose dashboard view">
+          <div hidden={dashboardView !== "today"} className="mt-5 inline-flex rounded-lg border border-[var(--dayline-line)] bg-white p-1 md:hidden" aria-label="Choose dashboard view">
             <button type="button" onClick={() => setMobileView("tasks")} aria-pressed={mobileView === "tasks"} className={`rounded-md px-4 py-2 text-sm font-medium ${mobileView === "tasks" ? "bg-[var(--dayline-forest)] text-white" : "text-[var(--dayline-muted)]"}`}>Tasks</button>
             <button type="button" onClick={() => setMobileView("schedule")} aria-pressed={mobileView === "schedule"} className={`rounded-md px-4 py-2 text-sm font-medium ${mobileView === "schedule" ? "bg-[var(--dayline-forest)] text-white" : "text-[var(--dayline-muted)]"}`}>Schedule</button>
           </div>
 
-          <div className="mt-7 grid items-start lg:grid-cols-[minmax(300px,0.8fr)_minmax(400px,1.2fr)]">
+          <div hidden={dashboardView !== "focus"} className="mt-7">
+            <FocusTimer />
+          </div>
+          <div hidden={dashboardView !== "today"} className="mt-7 grid items-start lg:grid-cols-[minmax(300px,0.8fr)_minmax(400px,1.2fr)]">
             <section id="tasks" className={`dashboard-enter min-w-0 pb-10 md:block lg:pr-8 ${mobileView === "tasks" ? "block" : "hidden"}`} aria-labelledby="tasks-heading">
               <div className="flex items-end justify-between gap-3">
                 <div>

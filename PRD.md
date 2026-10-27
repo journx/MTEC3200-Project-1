@@ -33,6 +33,7 @@ Interview research so far covers three like-minded peers. They described phone s
 - A user can mark a task complete and see that status reflected in both views.
 - The main view prioritizes upcoming and overdue tasks without requiring the user to navigate through multiple screens.
 - The layout works on a phone-sized viewport and uses clear labels and controls rather than relying on color alone.
+- A user can run an in-app focus timer with customizable focus and break durations. The timer does not block other apps or lock the device.
 
 **Milestone check:** In a usability test, a first-time user can add a task with a deadline, find it in the day's plan, and mark it complete without guidance. Record where they hesitate and whether the schedule is understandable at a glance.
 
@@ -50,7 +51,7 @@ Interview research so far covers three like-minded peers. They described phone s
 - Community notes, shared accountability, or social features
 - Daily affirmations or motivational content
 - Phone widgets or push notifications
-- A phone-level focus timer, break timer, or blocking other apps
+- Phone-level app blocking or a timer that prevents users from leaving the app
 - Location-based calendar or task behavior
 - Sleep tracking, sleep coaching, or health claims
 
